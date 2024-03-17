@@ -21,7 +21,7 @@ local function updateLocalFloorPosition()
         if not localFloor then
             localFloor = createLocalFloor()
         end
-        localFloor.Position = humanoidRootPart.Position - Vector3.new(0, humanoid.HipHeight + 3.5, 0) -- Чуть ниже ног
+        localFloor.Position = humanoidRootPart.Position - Vector3.new(0, humanoid.HipHeight + 4, 0) -- Чуть ниже ног
     elseif localFloor then
         localFloor:Destroy()
         localFloor = nil
