@@ -18,18 +18,18 @@ local function createESP(player)
         billboard.AlwaysOnTop = true
 
         local healthBackground = Instance.new("Frame")
-        healthBackground.Size = UDim2.new(1, 0, 0.1, 0)
+        healthBackground.Size = UDim2.new(1, 0, 0.2, 0)
         healthBackground.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
         healthBackground.Parent = billboard
 
         local healthBar = Instance.new("Frame")
-        healthBar.Size = UDim2.new(1, 0, 0.1, 0)
+        healthBar.Size = UDim2.new(1, 0, 0.2, 0)
         healthBar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
         healthBar.Parent = healthBackground
 
         local healthText = Instance.new("TextLabel")
-        healthText.Size = UDim2.new(1, 0, 0.1, 0)
-        healthText.Position = UDim2.new(0, 0, -0.1, 0)
+        healthText.Size = UDim2.new(1, 0, 0.2, 0)
+        healthText.Position = UDim2.new(0, 0, -0.2, 0)
         healthText.BackgroundTransparency = 1
         healthText.TextColor3 = Color3.fromRGB(255, 255, 255)
         healthText.TextScaled = true
@@ -48,7 +48,7 @@ local function updateHealthBar(player)
             local healthBar = billboard:FindFirstChildOfClass("Frame")
             local healthText = billboard:FindFirstChildOfClass("TextLabel")
             if healthBar and healthText then
-                healthBar.Size = UDim2.new(humanoid.Health / humanoid.MaxHealth, 0, 0.1, 0)
+                healthBar.Size = UDim2.new(humanoid.Health / humanoid.MaxHealth, 0, 0.2, 0)
                 healthText.Text = string.format("%d%%", (humanoid.Health / humanoid.MaxHealth) * 100)
             end
         end
