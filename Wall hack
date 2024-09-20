@@ -2,18 +2,65 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 local function createESP(player)
-    local highlight = Instance.new("Highlight")
-    highlight.Adornee = player.Character
-    highlight.FillTransparency = 0.5
-    highlight.OutlineTransparency = 0
-    highlight.FillColor = Color3.fromRGB(255, 0, 0)
-    highlight.OutlineColor = Color3.fromRGB(0, 255, 0)
-    highlight.Parent = player.Character
+    if player.Character and not player.Character:FindFirstChild("Highlight") then
+        local highlight = Instance.new("Highlight")
+        highlight.Adornee = player.Character
+        highlight.FillTransparency = 0.5
+        highlight.OutlineTransparency = 0
+        highlight.FillColor = Color3.fromRGB(255, 0, 0)
+        highlight.OutlineColor = Color3.fromRGB(0, 255, 0)
+        highlight.Parent = player.Character
+
+        local billboard = Instance.new("BillboardGui")
+        billboard.Adornee = player.Character:WaitForChild("Head")
+        billboard.Size = UDim2.new(4, 0, 1, 0)
+        billboard.StudsOffset = Vector3.new(0, 3, 0)
+        billboard.AlwaysOnTop = true
+
+        local healthBackground = Instance.new("Frame")
+        healthBackground.Size = UDim2.new(1, 0, 0.1, 0)
+        healthBackground.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
+        healthBackground.Parent = billboard
+
+        local healthBar = Instance.new("Frame")
+        healthBar.Size = UDim2.new(1, 0, 0.1, 0)
+        healthBar.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+        healthBar.Parent = healthBackground
+
+        local healthText = Instance.new("TextLabel")
+        healthText.Size = UDim2.new(1, 0, 0.1, 0)
+        healthText.Position = UDim2.new(0, 0, -0.1, 0)
+        healthText.BackgroundTransparency = 1
+        healthText.TextColor3 = Color3.fromRGB(255, 255, 255)
+        healthText.TextScaled = true
+        healthText.Parent = billboard
+
+        billboard.Parent = player.Character
+    end
+end
+
+local function updateHealthBar(player)
+    local character = player.Character
+    if character and character:FindFirstChild("Humanoid") then
+        local humanoid = character.Humanoid
+        local billboard = character:FindFirstChildOfClass("BillboardGui")
+        if billboard then
+            local healthBar = billboard:FindFirstChildOfClass("Frame")
+            local healthText = billboard:FindFirstChildOfClass("TextLabel")
+            if healthBar and healthText then
+                healthBar.Size = UDim2.new(humanoid.Health / humanoid.MaxHealth, 0, 0.1, 0)
+                healthText.Text = string.format("%d%%", (humanoid.Health / humanoid.MaxHealth) * 100)
+            end
+        end
+    end
 end
 
 local function onPlayerAdded(player)
     player.CharacterAdded:Connect(function(character)
         createESP(player)
+        character:WaitForChild("Humanoid").HealthChanged:Connect(function()
+            updateHealthBar(player)
+        end)
     end)
 end
 
@@ -22,14 +69,18 @@ Players.PlayerAdded:Connect(onPlayerAdded)
 for _, player in ipairs(Players:GetPlayers()) do
     if player.Character then
         createESP(player)
+        player.Character:WaitForChild("Humanoid").HealthChanged:Connect(function()
+            updateHealthBar(player)
+        end)
     end
     onPlayerAdded(player)
 end
 
 RunService.RenderStepped:Connect(function()
     for _, player in ipairs(Players:GetPlayers()) do
-        if player.Character and player.Character:FindFirstChild("Highlight") then
-            player.Character.Highlight.Enabled = true
+        if player.Character then
+            createESP(player)
+            updateHealthBar(player)
         end
     end
 end)
