@@ -1,0 +1,30 @@
+local teleportCoordinates = {
+    [1] = Vector3.new(-4994, 314, -3031),
+    [2] = Vector3.new(-12545, 377, -7481),
+    [3] = Vector3.new(-2144, 67, -12311),
+    [4] = Vector3.new(-16210, 9, 422),
+    [5] = Vector3.new(-9521, 315, 6740),
+    [6] = Vector3.new(-1132, 40, 6795),
+    [7] = Vector3.new(5903, 601, 248),
+    [8] = Vector3.new(2835, 423, -7176),
+    [9] = Vector3.new(80, 50, 0),
+    [10] = Vector3.new(90, 50, 0)
+}
+
+local player = game.Players.LocalPlayer
+
+local function teleportKillAndTeleport(coordinates)
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(coordinates)
+        player.Character:BreakJoints() 
+        wait(0.1)
+        player.Character.HumanoidRootPart.CFrame = CFrame.new(coordinates)
+    end
+end
+
+player.Chatted:Connect(function(message)
+    local number = tonumber(message)
+    if number and teleportCoordinates[number] then
+        teleportKillAndTeleport(teleportCoordinates[number])
+    end
+end)
