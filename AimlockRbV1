@@ -1,10 +1,9 @@
 local sizeMultiplier = 40
 local isScriptEnabled = false
 local buttonClicked = false
-local menuVisible = true -- Изначально меню будет видимым
+local menuVisible = true
 
 local aimDot = Instance.new("ImageLabel")
--- Здесь укажите ваш ID изображения или используйте rbxassetid://YOUR_IMAGE_ID
 aimDot.Image = "rbxassetid://YOUR_IMAGE_ID"
 aimDot.Size = UDim2.new(0, 4 * sizeMultiplier, 0, 4 * sizeMultiplier)
 aimDot.Position = UDim2.new(0.5, -2 * sizeMultiplier, 0.5, -2 * sizeMultiplier)
@@ -21,9 +20,7 @@ local function hasObstacleBetween(startPosition, endPosition)
     local raycastParams = RaycastParams.new()
     raycastParams.FilterType = Enum.RaycastFilterType.Blacklist
     raycastParams.FilterDescendantsInstances = {player.Character}
-
     local raycastResult = workspace:Raycast(startPosition, (endPosition - startPosition).unit * math.huge, raycastParams)
-
     return raycastResult ~= nil
 end
 
@@ -31,7 +28,7 @@ local Cam = workspace.CurrentCamera
 local hotkey = true
 
 function lookAt(target, eye)
-    Cam.CFrame = CFrame.new(target, eye + Vector3.new(0, 0.5, 0)) -- Прицеливаемся чуть выше тела + смещение по оси Y
+    Cam.CFrame = CFrame.new(target, eye + Vector3.new(0, 0.5, 0))
 end
 
 function getClosestPlayerToCursor(trg_part)
@@ -40,7 +37,7 @@ function getClosestPlayerToCursor(trg_part)
 
     for _, otherPlayer in ipairs(game.Players:GetPlayers()) do
         if otherPlayer ~= player and otherPlayer.Character and otherPlayer.Character:FindFirstChild(trg_part) then
-            if otherPlayer.UserId == 2548127423 then -- Игрок с указанным ID будет игнорироваться
+            if otherPlayer.UserId == 2548127423 then
                 continue
             end
             
@@ -71,11 +68,7 @@ end
 
 local function toggleAim()
     isScriptEnabled = not isScriptEnabled
-    if isScriptEnabled then
-        aimDot.Visible = true
-    else
-        aimDot.Visible = false
-    end
+    aimDot.Visible = isScriptEnabled
 
     local gui = player.PlayerGui:FindFirstChild("ScriptGUI")
     if not gui then
@@ -105,27 +98,24 @@ local function toggleAim()
     textButton.Text = isScriptEnabled and "Скрипт активен" or "Скрипт не активен"
     textButton.Parent = frame
 
-    local menuButton = Instance.new("TextButton") -- Кнопка для скрытия/показа меню
+    local menuButton = Instance.new("TextButton")
     menuButton.Size = UDim2.new(0, 25, 0, 25)
     menuButton.Position = UDim2.new(1, -30, 0, 12.5)
     menuButton.BackgroundTransparency = 0.5
-    menuButton.BackgroundColor3 = Color3.new(0, 0, 1) -- Синий цвет
+    menuButton.BackgroundColor3 = Color3.new(0, 0, 1)
     menuButton.TextColor3 = Color3.new(1, 1, 1)
     menuButton.Font = Enum.Font.SourceSansBold
     menuButton.TextSize = 18
-    menuButton.Text = "+" -- Изначально кнопка будет с текстом "+"
+    menuButton.Text = menuVisible and "-" or "+"
     menuButton.Parent = frame
 
-    -- Функция для скрытия/показа меню
     local function toggleMenu()
         menuVisible = not menuVisible
         frame.Visible = menuVisible
-        menuButton.Text = menuVisible and "-" or "+" -- Изменяем текст кнопки в зависимости от состояния меню
+        menuButton.Text = menuVisible and "-" or "+"
     end
 
-    menuButton.MouseButton1Click:Connect(function()
-        toggleMenu() -- При нажатии на кнопку, скрываем/показываем меню
-    end)
+    menuButton.MouseButton1Click:Connect(toggleMenu)
 
     textButton.MouseButton1Click:Connect(function()
         if not buttonClicked then
@@ -133,7 +123,7 @@ local function toggleAim()
             toggleAim()
             textButton.Text = isScriptEnabled and "Скрипт активен" or "Скрипт не активен"
             textButton.BackgroundColor3 = isScriptEnabled and Color3.new(0, 1, 0) or Color3.new(1, 0, 0)
-            wait(1) -- Задержка, чтобы предотвратить многократное нажатие в короткий промежуток времени
+            wait(1)
             buttonClicked = false
         end
     end)
@@ -144,7 +134,7 @@ game:GetService("RunService").RenderStepped:Connect(function()
 
     if isScriptEnabled and closest and closest.Character:FindFirstChild("Head") then
         targetPlayer = closest
-        local offset = Vector3.new(math.random(-15, 15) / 10, math.random(-15, 15) / 10, 0) -- Рандомизированное смещение наводки
+        local offset = Vector3.new(math.random(-15, 15) / 10, math.random(-15, 15) / 10, 0)
         lookAt(Cam.CFrame.p, targetPlayer.Character.Head.Position + offset)
     else
         targetPlayer = nil
