@@ -1,0 +1,213 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local mouse = player:GetMouse()
+
+local moveIncrement = 1
+local doubleClickThreshold = 0.3
+
+local BLUE_COLOR = Color3.fromRGB(0, 120, 215)
+local WHITE_COLOR = Color3.fromRGB(255, 255, 255)
+local RED_COLOR = Color3.fromRGB(255, 80, 80)
+local DARK_RED_COLOR = Color3.fromRGB(180, 40, 40)
+local GREEN_COLOR = Color3.fromRGB(50, 200, 50)
+
+local selectedParts = {}
+local originalProperties = {}
+local controlButtons = {}
+local dpadButtons = {}
+local lastClickedPart, lastClickTime = nil, 0
+
+local function createDPad()
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "DPadGUI"
+    gui.Parent = player.PlayerGui
+
+    local dpadFrame = Instance.new("Frame")
+    dpadFrame.Name = "DPadFrame"
+    dpadFrame.Size = UDim2.new(0, 180, 0, 180)
+    dpadFrame.Position = UDim2.new(0.5, -90, 0.7, -90)
+    dpadFrame.BackgroundTransparency = 1
+    dpadFrame.Parent = gui
+
+    local dpad = {
+        {Name = "U", Text = "U", Pos = UDim2.new(0.5, -30, 0.2, -30), Size = UDim2.new(0, 60, 0, 60)},
+        {Name = "D", Text = "D", Pos = UDim2.new(0.5, -30, 0.8, -30), Size = UDim2.new(0, 60, 0, 60)},
+        {Name = "L", Text = "L", Pos = UDim2.new(0.2, -30, 0.5, -30), Size = UDim2.new(0, 60, 0, 60)},
+        {Name = "R", Text = "R", Pos = UDim2.new(0.8, -30, 0.5, -30), Size = UDim2.new(0, 60, 0, 60)},
+        {Name = "F", Text = "F", Pos = UDim2.new(0.1, -100, 0.5, -30), Size = UDim2.new(0, 60, 0, 60)},
+        {Name = "S", Text = "S", Pos = UDim2.new(0.9, 40, 0.5, -30), Size = UDim2.new(0, 60, 0, 60)}
+    }
+
+    for _, btn in ipairs(dpad) do
+        local button = Instance.new("TextButton")
+        button.Name = btn.Name
+        button.Size = btn.Size
+        button.Position = btn.Pos
+        button.Text = btn.Text
+        button.TextColor3 = WHITE_COLOR
+        button.BackgroundColor3 = BLUE_COLOR
+        button.TextSize = 18
+        button.Font = Enum.Font.SourceSansBold
+        button.Visible = false
+        button.Parent = dpadFrame
+        
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0.3, 0)
+        corner.Parent = button
+        
+        dpadButtons[btn.Name] = button
+    end
+end
+
+local function createControlButtons()
+    local gui = player.PlayerGui:FindFirstChild("DPadGUI") or Instance.new("ScreenGui")
+    gui.Name = "DPadGUI"
+    gui.Parent = player.PlayerGui
+
+    local buttons = {
+        {Name = "R", Text = "R", Pos = UDim2.new(0.1, -50, 0.85, 0), Color = RED_COLOR},
+        {Name = "C", Text = "C", Pos = UDim2.new(0.3, -50, 0.85, 0), Color = BLUE_COLOR},
+        {Name = "D", Text = "D", Pos = UDim2.new(0.5, -50, 0.85, 0), Color = DARK_RED_COLOR},
+        {Name = "T", Text = "T", Pos = UDim2.new(0.7, -50, 0.85, 0), Color = GREEN_COLOR}
+    }
+
+    for _, btn in ipairs(buttons) do
+        local button = Instance.new("TextButton")
+        button.Name = btn.Name
+        button.Size = UDim2.new(0, 100, 0, 35)
+        button.Position = btn.Pos
+        button.Text = btn.Text
+        button.TextColor3 = WHITE_COLOR
+        button.BackgroundColor3 = btn.Color
+        button.TextSize = 14
+        button.Parent = gui
+        
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 8)
+        corner.Parent = button
+        
+        controlButtons[btn.Name] = button
+    end
+end
+
+local function saveOriginalProperties(part)
+    if not originalProperties[part] then
+        originalProperties[part] = {
+            Position = part.Position,
+            CanCollide = part.CanCollide
+        }
+    end
+end
+
+local function highlightPart(part, enable)
+    if not part then return end
+    
+    if enable then
+        saveOriginalProperties(part)
+        local highlight = Instance.new("SelectionBox")
+        highlight.Adornee = part
+        highlight.Color3 = BLUE_COLOR
+        highlight.LineThickness = 0.05
+        highlight.Parent = part
+        selectedParts[part] = true
+    else
+        if part:FindFirstChild("SelectionBox") then
+            part.SelectionBox:Destroy()
+        end
+        selectedParts[part] = nil
+    end
+    
+    local hasSelection = next(selectedParts) ~= nil
+    for _, btn in pairs(controlButtons) do btn.Visible = hasSelection end
+    for _, btn in pairs(dpadButtons) do btn.Visible = hasSelection end
+end
+
+local function onMouseClick()
+    local part = mouse.Target
+    if not part then return end
+    
+    local currentTime = tick()
+    if lastClickedPart == part and (currentTime - lastClickTime) < doubleClickThreshold then
+        highlightPart(part, true)
+        lastClickedPart = nil
+    else
+        if selectedParts[part] then highlightPart(part, false) end
+        lastClickedPart = part
+        lastClickTime = currentTime
+    end
+end
+
+local function moveSelected(direction)
+    local delta = Vector3.new(0, 0, 0)
+    
+    if direction == "U" then delta = Vector3.new(0, moveIncrement, 0)
+    elseif direction == "D" then delta = Vector3.new(0, -moveIncrement, 0)
+    elseif direction == "L" then delta = Vector3.new(-moveIncrement, 0, 0)
+    elseif direction == "R" then delta = Vector3.new(moveIncrement, 0, 0)
+    elseif direction == "F" then delta = Vector3.new(0, 0, -moveIncrement)
+    elseif direction == "S" then delta = Vector3.new(0, 0, moveIncrement) end
+    
+    for part in pairs(selectedParts) do
+        if part:IsA("BasePart") then part.Position += delta end
+    end
+end
+
+local function resetAll()
+    for part, props in pairs(originalProperties) do
+        if part and part.Parent then
+            part.Position = props.Position
+            part.CanCollide = props.CanCollide
+        end
+    end
+    for part in pairs(selectedParts) do
+        if part:FindFirstChild("SelectionBox") then
+            part.SelectionBox:Destroy()
+        end
+    end
+    selectedParts = {}
+    for _, btn in pairs(controlButtons) do btn.Visible = false end
+    for _, btn in pairs(dpadButtons) do btn.Visible = false end
+end
+
+local function teleportToObject()
+    if next(selectedParts) then
+        for part in pairs(selectedParts) do
+            if part:IsA("BasePart") then
+                local character = player.Character
+                if character then
+                    local humanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+                    if humanoidRootPart then
+                        humanoidRootPart.CFrame = part.CFrame + Vector3.new(0, 5, 0)
+                        break
+                    end
+                end
+            end
+        end
+    end
+end
+
+createDPad()
+createControlButtons()
+
+controlButtons.R.MouseButton1Click:Connect(resetAll)
+controlButtons.C.MouseButton1Click:Connect(function()
+    for part in pairs(selectedParts) do part.CanCollide = not part.CanCollide end
+end)
+controlButtons.D.MouseButton1Click:Connect(function()
+    for part in pairs(selectedParts) do part:Destroy() end
+    for part in pairs(selectedParts) do
+        if part:FindFirstChild("SelectionBox") then
+            part.SelectionBox:Destroy()
+        end
+    end
+    selectedParts = {}
+    for _, btn in pairs(controlButtons) do btn.Visible = false end
+    for _, btn in pairs(dpadButtons) do btn.Visible = false end
+end)
+controlButtons.T.MouseButton1Click:Connect(teleportToObject)
+
+for name, btn in pairs(dpadButtons) do
+    btn.MouseButton1Click:Connect(function() moveSelected(name) end)
+end
+
+mouse.Button1Down:Connect(onMouseClick)
