@@ -11,8 +11,9 @@ local function createLocalFloor()
     floor.Size = Vector3.new(10, 1, 10)
     floor.Anchored = true
     floor.CanCollide = true
+    floor.Transparency = 0.5
+    floor.Color = Color3.new(0.8, 0.8, 0.8)
     floor.Parent = workspace
-
     return floor
 end
 
@@ -21,7 +22,7 @@ local function updateLocalFloorPosition()
         if not localFloor then
             localFloor = createLocalFloor()
         end
-        localFloor.Position = humanoidRootPart.Position - Vector3.new(0, humanoid.HipHeight + 1.5, 0) -- Чуть ниже ног
+        localFloor.Position = humanoidRootPart.Position - Vector3.new(0, humanoid.HipHeight + 1.5, 0)
     elseif localFloor then
         localFloor:Destroy()
         localFloor = nil
@@ -30,22 +31,27 @@ end
 
 local function toggleLocalFloor()
     isActivated = not isActivated
-    toggleButton.Text = isActivated and "Выкл" or "Вкл"
+    toggleButton.Text = isActivated and "OFF" or "ON"
+    toggleButton.BackgroundColor3 = isActivated and Color3.new(0.8, 0.2, 0.2) or Color3.new(0.2, 0.8, 0.2)
 end
 
 local gui = Instance.new("ScreenGui")
 gui.Parent = player.PlayerGui
 
 local toggleButton = Instance.new("TextButton")
-toggleButton.Size = UDim2.new(0, 100, 0, 30)
-toggleButton.Position = UDim2.new(0.5, -50, 0, 10)
-toggleButton.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+toggleButton.Size = UDim2.new(0, 80, 0, 30)
+toggleButton.Position = UDim2.new(0.5, -40, 0.9, 0)
+toggleButton.BackgroundColor3 = Color3.new(0.2, 0.8, 0.2)
 toggleButton.TextColor3 = Color3.new(1, 1, 1)
-toggleButton.FontSize = Enum.FontSize.Size14
-toggleButton.Text = "Вкл"
+toggleButton.Font = Enum.Font.SourceSansBold
+toggleButton.TextSize = 14
+toggleButton.Text = "ON"
 toggleButton.Parent = gui
+
+local corner = Instance.new("UICorner")
+corner.CornerRadius = UDim.new(0, 8)
+corner.Parent = toggleButton
 
 toggleButton.MouseButton1Click:Connect(toggleLocalFloor)
 
--- Обновляем позицию пола под игроком только если кнопка включена
 game:GetService("RunService").Stepped:Connect(updateLocalFloorPosition)
